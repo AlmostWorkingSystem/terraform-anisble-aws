@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "6.8.0"
     }
   }
@@ -9,4 +9,11 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      managed_by = "tf",
+      owner      = "erp"
+    }
+  }
 }
