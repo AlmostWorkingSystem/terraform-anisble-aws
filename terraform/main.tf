@@ -10,6 +10,13 @@ module "security_group" {
   ingress_rules = [
     {
       description = "Allow HTTP"
+      from_port   = 8000
+      to_port     = 8000
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      description = "Allow HTTP"
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
@@ -42,17 +49,18 @@ module "security_group" {
 
 resource "aws_key_pair" "tf_key" {
   key_name   = "my-ssh-key"
-  public_key = file("keys/tf_key.pub")
+  public_key = file("../keys/tf_key.pub")
 }
 
 locals {
   ec2 = {
     tf_demo_erp = {
-      instance_type = "t3.micro"
+      instance_type = "t3.medium"
       key_name      = aws_key_pair.tf_key.key_name
       sg_ids        = [for sg in module.security_group : sg]
       subdomain     = "dev.erp"
       assign_eip    = true
+      volume_size   = 30
     }
   }
 }
@@ -68,6 +76,7 @@ module "aws_instance" {
   key_name      = each.value.key_name
   sg_ids        = each.value.sg_ids
   assign_eip    = each.value.assign_eip
+  volume_size   = each.value.volume_size
 }
 
 resource "aws_route53_record" "subdomain" {

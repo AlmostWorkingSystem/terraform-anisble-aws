@@ -19,6 +19,12 @@ resource "aws_instance" "this" {
   vpc_security_group_ids = [for sg in var.sg_ids : sg]
   key_name               = var.key_name
 
+  root_block_device {
+    volume_size           = var.volume_size
+    volume_type           = "gp3"
+    delete_on_termination = true
+  }
+
   tags = {
     Name = var.instance_name
   }

@@ -20,3 +20,8 @@ variable "assign_eip" {
   description = "Whether to allocate and associate an Elastic IP"
   default     = false
 }
+
+variable "volume_size" {
+  type    = number
+  default = 10
+}
