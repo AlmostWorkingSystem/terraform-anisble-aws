@@ -1,0 +1,9 @@
+---
+- hosts: hosts
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Download and run Coolify install script
+      ansible.builtin.shell: |
+        curl -fsSL https://cdn.coollabs.io/coolify/install.sh | sudo bash

@@ -54,13 +54,13 @@ resource "aws_key_pair" "tf_key" {
 
 locals {
   ec2 = {
-    tf_demo_erp = {
+    coolify_dev = {
       instance_type = "t3.medium"
       key_name      = aws_key_pair.tf_key.key_name
       sg_ids        = [for sg in module.security_group : sg]
       subdomain     = "dev.erp"
       assign_eip    = true
-      volume_size   = 30
+      volume_size   = 50
     }
   }
 }
@@ -79,10 +79,18 @@ module "aws_instance" {
   volume_size   = each.value.volume_size
 }
 
-resource "aws_route53_record" "subdomain" {
+resource "aws_route53_record" "dev_erp" {
   zone_id = var.kiet_domain_zone_id
-  name    = local.ec2.tf_demo_erp.subdomain
+  name    = "dev.erp"
   type    = "A"
-  ttl     = 10
-  records = [module.aws_instance["tf_demo_erp"].public_ip]
+  ttl     = 300
+  records = [module.aws_instance["coolify_dev"].public_ip]
+}
+
+resource "aws_route53_record" "_dev_erp" {
+  zone_id = var.kiet_domain_zone_id
+  name    = "*.dev.erp"
+  type    = "A"
+  ttl     = 300
+  records = [module.aws_instance["coolify_dev"].public_ip]
 }
