@@ -10,13 +10,6 @@ module "security_group" {
   ingress_rules = [
     {
       description = "Allow HTTP"
-      from_port   = 8000
-      to_port     = 8000
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    },
-    {
-      description = "Allow HTTP"
       from_port   = 80
       to_port     = 80
       protocol    = "tcp"
@@ -47,20 +40,60 @@ module "security_group" {
   }]
 }
 
+
+module "sg_db" {
+  name   = "sg_db"
+  source = "./modules/security-group"
+  vpc_id = data.aws_vpc.default.id
+
+  ingress_rules = [
+    {
+      description = "Allow SSH"
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      description = "Postgres port"
+      from_port   = 1111
+      to_port     = 1111
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
+  egress_rules = [{
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }]
+
+}
+
 resource "aws_key_pair" "tf_key" {
-  key_name   = "my-ssh-key"
+  key_name   = "tf_key"
   public_key = file("../keys/tf_key.pub")
 }
 
+# sg_ids        = [for sg in module.security_group : sg]
 locals {
   ec2 = {
-    coolify_dev = {
+    staging_db = {
+      instance_type = "t3.small"
+      key_name      = aws_key_pair.tf_key.key_name
+      sg_ids        = [for sg in module.sg_db : sg]
+      volume_size   = 20
+      assign_eip    = true
+    },
+    staging = {
       instance_type = "t3.medium"
       key_name      = aws_key_pair.tf_key.key_name
       sg_ids        = [for sg in module.security_group : sg]
-      subdomain     = "dev.erp"
-      assign_eip    = true
       volume_size   = 50
+      assign_eip    = true
+
     }
   }
 }
@@ -75,22 +108,22 @@ module "aws_instance" {
   instance_type = each.value.instance_type
   key_name      = each.value.key_name
   sg_ids        = each.value.sg_ids
-  assign_eip    = each.value.assign_eip
+  assign_eip    = lookup(each.value, "assign_eip", false)
   volume_size   = each.value.volume_size
 }
 
 resource "aws_route53_record" "dev_erp" {
   zone_id = var.kiet_domain_zone_id
-  name    = "dev.erp"
+  name    = "erp"
   type    = "A"
   ttl     = 300
-  records = [module.aws_instance["coolify_dev"].public_ip]
+  records = [module.aws_instance["staging"].public_ip]
 }
 
 resource "aws_route53_record" "_dev_erp" {
   zone_id = var.kiet_domain_zone_id
-  name    = "*.dev.erp"
+  name    = "*.erp"
   type    = "A"
   ttl     = 300
-  records = [module.aws_instance["coolify_dev"].public_ip]
+  records = [module.aws_instance["staging"].public_ip]
 }

@@ -1,8 +1,11 @@
 install_docker: 
-  ansible-playbook -i inventory.ini playbook.yml -vv
+  ansible-playbook -i inventory.ini playbooks/install_docker.yml -vv
 
 update_system:
   ansible-playbook -i inventory.ini playbooks/update_system.yml -vv
 
 install_coolify:
   ansible-playbook -i inventory.ini playbooks/install_coolify.yml -vv
+
+gen_ssh:
+  ansible-playbook -i inventory.ini playbooks/ssh_key.yml -vv

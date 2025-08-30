@@ -1,0 +1,40 @@
+---
+- hosts: hosts
+  become: true
+  gather_facts: true
+  vars:
+    target_user: "{{ ansible_user }}" # default to the current remote user
+
+  tasks:
+    - name: Ensure curl is installed
+      apt:
+        name: curl
+        state: present
+
+    - name: Download Docker install script
+      get_url:
+        url: https://get.docker.com/
+        dest: /tmp/get-docker.sh
+        mode: "0755"
+
+    - name: Run Docker install script
+      command: sh /tmp/get-docker.sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ensure Docker group exists
+      group:
+        name: docker
+        state: present
+
+    - name: Add user to Docker group
+      user:
+        name: "{{ target_user }}"
+        groups: docker
+        append: yes

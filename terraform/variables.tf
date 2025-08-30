@@ -7,5 +7,5 @@ variable "ami_id_deb" {
 }
 
 variable "kiet_domain_zone_id" {
-  default = "Z076900731VYLETHWJBJA"
+  default = "Z0970303X4Z7437WL0G9"
 }

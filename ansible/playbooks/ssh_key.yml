@@ -1,0 +1,28 @@
+---
+- hosts: hosts
+  become: true
+  gather_facts: true
+  vars:
+    ssh_key_path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+  tasks:
+    - name: Ensure .ssh directory exists
+      file:
+        path: "/home/{{ ansible_user }}/.ssh"
+        state: directory
+        mode: "0700"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Generate SSH key for GitHub
+      openssh_keypair:
+        path: "{{ ssh_key_path }}"
+        type: rsa
+        size: 4096
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0600"
+      register: ssh_key
+
+    - name: Print the public key
+      debug:
+        msg: "{{ ssh_key.public_key }}"
