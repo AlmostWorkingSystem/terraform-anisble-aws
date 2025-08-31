@@ -8,17 +8,29 @@ output "instance_ids" {
   value       = [for inst in module.aws_instance : inst]
 }
 
-# output "security_group_ids" {
-#   description = "All security group IDs created"
-#   value       = [for sg in module.security_group : sg]
-# }
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket for OpenProject attachments"
+  value       = module.attachments_bucket.bucket_name
+}
 
-# output "dns_records" {
-#   description = "All DNS record values created"
-#   value       = module.dns.records
-# }
+output "s3_bucket_arn" {
+  description = "ARN of the S3 bucket for OpenProject attachments"
+  value       = module.attachments_bucket.bucket_arn
+}
 
-# output "zone_id" {
-#   description = "Hosted Zone ID used for DNS"
-#   value       = module.dns.zone_id
-# }
+output "iam_user_name" {
+  description = "IAM user created for OpenProject"
+  value       = module.openproject_user.user_name
+}
+
+output "iam_access_key_id" {
+  description = "Access key ID for the OpenProject IAM user (if created)"
+  value       = module.openproject_user.access_key_id
+  sensitive   = true
+}
+
+output "iam_secret_access_key" {
+  description = "Secret access key for the OpenProject IAM user (if created)"
+  value       = module.openproject_user.secret_access_key
+  sensitive   = true
+}

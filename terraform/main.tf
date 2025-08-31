@@ -127,3 +127,41 @@ resource "aws_route53_record" "_dev_erp" {
   ttl     = 300
   records = [module.aws_instance["staging"].public_ip]
 }
+
+module "attachments_bucket" {
+  source                   = "./modules/s3"
+  bucket_name              = "op-attachments"
+  force_destroy            = true
+  aws_s3_bucket_versioning = "Disabled"
+}
+
+resource "aws_iam_policy" "openproject_bucket_policy" {
+  name        = "OpenProjectS3Access"
+  description = "Access to OpenProject attachments bucket"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          module.attachments_bucket.bucket_arn,
+          "${module.attachments_bucket.bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+module "openproject_user" {
+  source = "./modules/iam"
+
+  user_name = "openproject-s3-user"
+
+  managed_policy_arns = [aws_iam_policy.openproject_bucket_policy.arn]
+}
