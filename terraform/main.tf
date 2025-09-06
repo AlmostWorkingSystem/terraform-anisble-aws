@@ -60,6 +60,13 @@ module "sg_db" {
       to_port     = 1111
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      description = "Redis port"
+      from_port   = 1112
+      to_port     = 1112
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
     }
   ]
   egress_rules = [{
@@ -120,6 +127,14 @@ resource "aws_route53_record" "dev_erp" {
   records = [module.aws_instance["staging"].public_ip]
 }
 
+resource "aws_route53_record" "staging_db" {
+  zone_id = var.kiet_domain_zone_id
+  name    = "db"
+  type    = "A"
+  ttl     = 300
+  records = [module.aws_instance["staging_db"].public_ip]
+}
+
 resource "aws_route53_record" "_dev_erp" {
   zone_id = var.kiet_domain_zone_id
   name    = "*.erp"
@@ -128,6 +143,59 @@ resource "aws_route53_record" "_dev_erp" {
   records = [module.aws_instance["staging"].public_ip]
 }
 
+locals {
+  s3_buckets = {
+    # "postgresql-db-bkp" = {
+    #   force_destroy = true
+    # },
+    "erp3-attachments" = {
+      force_destroy       = true
+      block_public_policy = false
+    }
+  }
+}
+
+module "s3_buckets" {
+  for_each = local.s3_buckets
+  source   = "./modules/s3"
+
+  bucket_name         = each.key
+  force_destroy       = each.value.force_destroy
+  block_public_policy = each.value.block_public_policy
+}
+
+# Create IAM policies for each bucket dynamically
+resource "aws_iam_policy" "s3_bucket_policy" {
+  for_each = local.s3_buckets
+
+  name        = "${each.key}-policy"
+  description = "Access to ${each.key} bucket"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "s3:*"
+        Resource = [
+          module.s3_buckets[each.key].bucket_arn,
+          "${module.s3_buckets[each.key].bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# Create IAM users dynamically
+module "s3_users" {
+  for_each = local.s3_buckets
+  source   = "./modules/iam"
+
+  user_name           = "s3-${each.key}-user"
+  managed_policy_arns = [aws_iam_policy.s3_bucket_policy[each.key].arn]
+}
+
+
+########################### op-attachments ####################################
 module "attachments_bucket" {
   source                   = "./modules/s3"
   bucket_name              = "op-attachments"
@@ -165,3 +233,4 @@ module "openproject_user" {
 
   managed_policy_arns = [aws_iam_policy.openproject_bucket_policy.arn]
 }
+########################### op-attachments ####################################

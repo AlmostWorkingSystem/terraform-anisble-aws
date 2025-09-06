@@ -17,3 +17,8 @@ variable "aws_s3_bucket_versioning" {
     error_message = "aws_s3_bucket_versioning must be one of: Enabled, Suspended, Disabled."
   }
 }
+
+variable "block_public_policy" {
+  default = true
+  type    = bool
+}

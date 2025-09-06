@@ -5,14 +5,15 @@ resource "aws_s3_bucket" "this" {
 
 resource "aws_s3_bucket_public_access_block" "this" {
   bucket              = aws_s3_bucket.this.id
-  block_public_acls   = true
-  block_public_policy = true
+  block_public_acls   = var.block_public_policy
+  block_public_policy = var.block_public_policy
 }
 
-resource "aws_s3_bucket_versioning" "this" {
-  bucket = aws_s3_bucket.this.id
-  versioning_configuration {
-    mfa_delete = "Disabled"
-    status     = var.aws_s3_bucket_versioning
-  }
-}
+# resource "aws_s3_bucket_versioning" "this" {
+#   bucket = aws_s3_bucket.this.id
+
+#   versioning_configuration {
+#     mfa_delete = "Disabled"
+#     status     = "Disabled"
+#   }
+# }
