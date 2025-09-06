@@ -9,3 +9,9 @@ install_coolify:
 
 gen_ssh:
   ansible-playbook -i inventory.ini playbooks/ssh_key.yml -vv
+
+auto_update:
+  ansible-playbook -i inventory.ini playbooks/auto_update.yml -vv
+
+set_timezone:
+  ansible-playbook -i inventory.ini playbooks/set_timezone.yml -vv

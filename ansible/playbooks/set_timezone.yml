@@ -1,0 +1,9 @@
+---
+- hosts: hosts
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Set timezone to Asia/Kolkata
+      community.general.timezone:
+        name: Asia/Kolkata
