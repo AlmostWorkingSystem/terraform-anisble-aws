@@ -1,0 +1,6 @@
+---
+- import_playbook: set_timezone.yml
+- import_playbook: update_system.yml
+- import_playbook: auto_update.yml
+- import_playbook: install_docker.yml
+- import_playbook: gen_ssh.yml

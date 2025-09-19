@@ -6,21 +6,37 @@
     target_user: "{{ ansible_user }}" # default to the current remote user
 
   tasks:
-    - name: Ensure curl is installed
+    - name: Ensure curl is installed on Debian/Ubuntu
       apt:
         name: curl
         state: present
+        update_cache: yes
+      when: ansible_facts['os_family'] in ["Debian"]
+
+    # - name: Ensure curl is installed on RHEL/Amazon Linux
+    #   dnf:
+    #     package: curl
+    #     state: present
+    #   when: ansible_facts['os_family'] in ["RedHat", "Amazon"]
 
     - name: Download Docker install script
       get_url:
         url: https://get.docker.com/
         dest: /tmp/get-docker.sh
         mode: "0755"
+      when: ansible_facts['os_family'] in ["Debian"]
 
     - name: Run Docker install script
       command: sh /tmp/get-docker.sh
       args:
         creates: /usr/bin/docker
+      when: ansible_facts['os_family'] in ["Debian"]
+
+    - name: Install Docker on Amazon Linux 2023
+      dnf:
+        name: docker
+        state: present
+      when: ansible_distribution == "Amazon"
 
     - name: Ensure Docker service is running
       service:

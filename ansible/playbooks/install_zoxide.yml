@@ -1,0 +1,25 @@
+---
+- hosts: hosts
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Download and run zoxide install script
+      ansible.builtin.shell: |
+        curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+
+    - name: Ensure ~/.local/bin is in PATH for admin
+      ansible.builtin.lineinfile:
+        path: /home/admin/.bashrc # change "admin" to your actual username
+        line: 'export PATH="$HOME/.local/bin:$PATH"'
+        insertafter: EOF
+        create: yes
+      become: false
+
+    - name: Add zoxide init to admin bashrc
+      ansible.builtin.lineinfile:
+        path: /home/admin/.bashrc # change "admin" to your actual username
+        line: 'eval "$(zoxide init bash)"'
+        insertafter: EOF
+        create: yes
+      become: false

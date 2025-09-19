@@ -21,6 +21,12 @@ variable "assign_eip" {
   default     = false
 }
 
+variable "availability_zone" {
+  type        = string
+  description = "The availability zone where the instance will be launched"
+  default     = "ap-south-2c"
+}
+
 variable "volume_size" {
   type    = number
   default = 10

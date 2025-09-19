@@ -8,10 +8,20 @@ install_coolify:
   ansible-playbook -i inventory.ini playbooks/install_coolify.yml -vv
 
 gen_ssh:
-  ansible-playbook -i inventory.ini playbooks/ssh_key.yml -vv
+  ansible-playbook -i inventory.ini playbooks/gen_ssh.yml -vv
 
 auto_update:
   ansible-playbook -i inventory.ini playbooks/auto_update.yml -vv
 
 set_timezone:
   ansible-playbook -i inventory.ini playbooks/set_timezone.yml -vv
+
+install_zoxide:
+  ansible-playbook -i inventory.ini playbooks/install_zoxide.yml -vv
+
+base_setup:
+  ansible-playbook -i inventory.ini playbooks/base_setup.yml -vv
+
+aws_ecr_login:
+  aws ecr get-login-password --region ap-south-2 \
+    | docker login --username AWS --password-stdin 029930584218.dkr.ecr.ap-south-2.amazonaws.com

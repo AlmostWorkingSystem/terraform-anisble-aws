@@ -55,18 +55,32 @@ module "sg_db" {
       cidr_blocks = ["0.0.0.0/0"]
     },
     {
-      description = "Postgres port"
-      from_port   = 1111
-      to_port     = 1111
+      description = "Allow HTTP"
+      from_port   = 80
+      to_port     = 80
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      description = "Allow HTTPS"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      description = "PG Bouncer"
+      from_port   = 6432
+      to_port     = 6432
+      protocol    = "tcp"
+      cidr_blocks = ["172.31.21.201/32", "172.31.25.87/32"]
     },
     {
       description = "Redis port"
       from_port   = 1112
       to_port     = 1112
       protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
+      cidr_blocks = ["172.31.21.201/32", "172.31.25.87/32"]
     }
   ]
   egress_rules = [{
@@ -93,14 +107,25 @@ locals {
       sg_ids        = [for sg in module.sg_db : sg]
       volume_size   = 20
       assign_eip    = true
+      ami_id        = var.ami_id_deb
     },
-    staging = {
-      instance_type = "t3.medium"
+    # OPEN-PROJECT INSTANCE
+    openproject = {
+      instance_type = "t4g.small"
       key_name      = aws_key_pair.tf_key.key_name
       sg_ids        = [for sg in module.security_group : sg]
-      volume_size   = 50
+      volume_size   = 20
       assign_eip    = true
-
+      ami_id        = var.ami_id_deb
+      ami_id        = "ami-08a74fd5a291db25a"
+    }
+    staging = {
+      instance_type = "t4g.large"
+      ami_id        = "ami-08a74fd5a291db25a"
+      key_name      = aws_key_pair.tf_key.key_name
+      sg_ids        = [for sg in module.security_group : sg]
+      volume_size   = 25
+      assign_eip    = true
     }
   }
 }
@@ -110,23 +135,43 @@ module "aws_instance" {
 
   for_each = local.ec2
 
-  instance_name = each.key
-  ami_id        = var.ami_id_deb
-  instance_type = each.value.instance_type
-  key_name      = each.value.key_name
-  sg_ids        = each.value.sg_ids
-  assign_eip    = lookup(each.value, "assign_eip", false)
-  volume_size   = each.value.volume_size
+  instance_name     = each.key
+  ami_id            = each.value.ami_id
+  instance_type     = each.value.instance_type
+  key_name          = each.value.key_name
+  sg_ids            = each.value.sg_ids
+  assign_eip        = lookup(each.value, "assign_eip", false)
+  volume_size       = each.value.volume_size
+  availability_zone = "ap-south-2c"
 }
-
-resource "aws_route53_record" "dev_erp" {
+resource "aws_route53_record" "hub_erp" {
   zone_id = var.kiet_domain_zone_id
-  name    = "erp"
+  name    = "hub.erp"
+  type    = "A"
+  ttl     = 300
+  records = [module.aws_instance["openproject"].public_ip]
+}
+resource "aws_route53_record" "test_erp" {
+  zone_id = var.kiet_domain_zone_id
+  name    = "staging.erp"
   type    = "A"
   ttl     = 300
   records = [module.aws_instance["staging"].public_ip]
 }
-
+resource "aws_route53_record" "_staging_erp" {
+  zone_id = var.kiet_domain_zone_id
+  name    = "*.staging.erp"
+  type    = "A"
+  ttl     = 300
+  records = [module.aws_instance["staging"].public_ip]
+}
+# resource "aws_route53_record" "erp" {
+#   zone_id = var.kiet_domain_zone_id
+#   name    = "erp"
+#   type    = "A"
+#   ttl     = 300
+#   records = [module.aws_instance["openproject"].public_ip]
+# }
 resource "aws_route53_record" "staging_db" {
   zone_id = var.kiet_domain_zone_id
   name    = "db"
@@ -134,23 +179,27 @@ resource "aws_route53_record" "staging_db" {
   ttl     = 300
   records = [module.aws_instance["staging_db"].public_ip]
 }
-
-resource "aws_route53_record" "_dev_erp" {
+resource "aws_route53_record" "_staging_db" {
   zone_id = var.kiet_domain_zone_id
-  name    = "*.erp"
+  name    = "*.db"
   type    = "A"
   ttl     = 300
-  records = [module.aws_instance["staging"].public_ip]
+  records = [module.aws_instance["staging_db"].public_ip]
 }
 
 locals {
   s3_buckets = {
-    # "postgresql-db-bkp" = {
-    #   force_destroy = true
-    # },
+    "learning-s3-storage" = {
+      force_destroy       = true
+      block_public_policy = true
+    },
     "erp3-attachments" = {
       force_destroy       = true
       block_public_policy = false
+    },
+    "postgres-all-db-backup" = {
+      force_destroy       = true
+      block_public_policy = true
     }
   }
 }
@@ -227,10 +276,84 @@ resource "aws_iam_policy" "openproject_bucket_policy" {
 }
 
 module "openproject_user" {
-  source = "./modules/iam"
-
-  user_name = "openproject-s3-user"
-
+  source              = "./modules/iam"
+  user_name           = "openproject-s3-user"
   managed_policy_arns = [aws_iam_policy.openproject_bucket_policy.arn]
 }
 ########################### op-attachments ####################################
+
+
+
+#################################### ecr start ####################################
+locals {
+  ecr = {
+    "erp_frontend" = {
+      image_tag_mutability = "MUTABLE"
+      scan_on_push         = false
+      # tags = {
+      #   Environment = "dev"
+      #   Project     = "my-project"
+      # }
+    }
+    "erp_backend" = {
+      image_tag_mutability = "MUTABLE"
+      scan_on_push         = true
+      # tags = {
+      #   Environment = "staging"
+      #   Project     = "another-project"
+      # }
+    }
+  }
+}
+
+module "ecr" {
+  source   = "./modules/ecr"
+  for_each = local.ecr
+
+  repository_name      = each.key
+  image_tag_mutability = each.value.image_tag_mutability
+  scan_on_push         = each.value.scan_on_push
+  tags                 = can(each.value.tags) ? each.value.tags : null
+}
+
+data "aws_iam_policy_document" "ecr_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:PutImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeRepositories",
+      "ecr:GetRepositoryPolicy",
+      "ecr:ListImages",
+      "ecr:DeleteRepository",
+      "ecr:BatchDeleteImage"
+    ]
+    resources = [
+      for repo in module.ecr : repo.repository_arn
+    ]
+  }
+
+  # Needed so the user can authenticate
+  statement {
+    effect    = "Allow"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+}
+
+module "ecr_users" {
+  source = "./modules/iam"
+
+  user_name           = "ecr-admin-user"
+  managed_policy_arns = []
+
+  inline_policies = {
+    ecr_custom = data.aws_iam_policy_document.ecr_access.json
+  }
+}
+#################################### ecr end ####################################

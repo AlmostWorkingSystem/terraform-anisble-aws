@@ -18,6 +18,7 @@ resource "aws_instance" "this" {
   instance_type          = var.instance_type
   vpc_security_group_ids = [for sg in var.sg_ids : sg]
   key_name               = var.key_name
+  availability_zone      = var.availability_zone
 
   root_block_device {
     volume_size           = var.volume_size
