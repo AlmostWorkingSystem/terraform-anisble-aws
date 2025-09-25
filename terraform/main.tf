@@ -111,7 +111,7 @@ locals {
     },
     # OPEN-PROJECT INSTANCE
     openproject = {
-      instance_type = "t4g.small"
+      instance_type = "t4g.medium"
       key_name      = aws_key_pair.tf_key.key_name
       sg_ids        = [for sg in module.security_group : sg]
       volume_size   = 20
