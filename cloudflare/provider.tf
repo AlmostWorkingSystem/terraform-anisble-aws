@@ -5,48 +5,20 @@ terraform {
       version = "~> 5"
     }
   }
+
+  backend "s3" {
+    bucket                      = "cf-tf-state"
+    key                         = "terraform.tfstate"
+    region                      = "auto"
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    skip_region_validation      = true
+    access_key                  = "dd66ddc2d37ff67990a88c335fe0bd4b"
+    secret_key                  = "e34bd7dd256543fbcfcd61be24bda6ca1b60588b393d338e3433c436f5cecb4c"
+    endpoint                    = "https://d769abdb178059146893fd12fa1acb44.r2.cloudflarestorage.com"
+  }
 }
 
 provider "cloudflare" {
   # API token will be read from CLOUDFLARE_API_TOKEN environment variable
-}
-
-resource "cloudflare_dns_record" "db" {
-  zone_id = var.zone_id
-  name    = "db.kiet.co.in"
-  content = "18.61.7.209"
-  type    = "A"
-  ttl     = 300
-  proxied = false
-  comment = "For DB"
-}
-
-resource "cloudflare_dns_record" "_db" {
-  zone_id = var.zone_id
-  name    = "*.db.kiet.co.in"
-  content = "18.61.7.209"
-  type    = "A"
-  ttl     = 300
-  proxied = false
-  comment = "For DB Adminer and stuff"
-}
-
-resource "cloudflare_dns_record" "hub" {
-  zone_id = var.zone_id
-  name    = "hub.erp.kiet.co.in"
-  content = "98.130.130.170"
-  type    = "A"
-  ttl     = 300
-  proxied = false
-  comment = "For ERP OpenProject"
-}
-
-resource "cloudflare_dns_record" "backend" {
-  zone_id = var.zone_id
-  name    = "backend.staging.erp.kiet.co.in"
-  content = "18.60.11.244"
-  type    = "A"
-  ttl     = 300
-  proxied = false
-  comment = "For ERP Backend"
 }

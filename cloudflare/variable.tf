@@ -13,5 +13,4 @@ variable "account_id" {
 variable "domain" {
   description = "Domain name"
   type        = string
-  default     = "example.com"
 }
