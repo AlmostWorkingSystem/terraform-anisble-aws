@@ -73,7 +73,38 @@ module "sg_db" {
       from_port   = 6432
       to_port     = 6432
       protocol    = "tcp"
-      cidr_blocks = ["172.31.21.201/32", "172.31.25.87/32"]
+      cidr_blocks = [
+        "172.31.21.201/32",
+        "172.31.25.87/32",
+
+        "173.245.48.0/20",
+        "103.21.244.0/22",
+        "103.22.200.0/22",
+        "103.31.4.0/22",
+        "141.101.64.0/18",
+        "108.162.192.0/18",
+        "190.93.240.0/20",
+        "188.114.96.0/20",
+        "197.234.240.0/22",
+        "198.41.128.0/17",
+        "162.158.0.0/15",
+        "104.16.0.0/13",
+        "104.24.0.0/14",
+        "172.64.0.0/13",
+        "131.0.72.0/22",
+
+        # ! Remove this
+        "0.0.0.0/0"
+      ]
+      ipv6_cidr_blocks = [
+        "2400:cb00::/32",
+        "2606:4700::/32",
+        "2803:f800::/32",
+        "2405:b500::/32",
+        "2405:8100::/32",
+        "2a06:98c0::/29",
+        "2c0f:f248::/32"
+      ]
     },
     {
       description = "Redis port"
@@ -158,6 +189,18 @@ resource "aws_route53_record" "test_erp" {
   ttl     = 300
   records = [module.aws_instance["staging"].public_ip]
 }
+
+resource "aws_route53_record" "frontend_staging_ns" {
+  zone_id = var.kiet_domain_zone_id
+  name    = "frontend.staging.kiet.co.in"
+  type    = "NS"
+  ttl     = 300
+  records = [
+    "gail.ns.cloudflare.com",
+    "igor.ns.cloudflare.com"
+  ]
+}
+
 resource "aws_route53_record" "_staging_erp" {
   zone_id = var.kiet_domain_zone_id
   name    = "*.staging.erp"
