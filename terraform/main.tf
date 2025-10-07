@@ -132,13 +132,13 @@ resource "aws_key_pair" "tf_key" {
 # sg_ids        = [for sg in module.security_group : sg]
 locals {
   ec2 = {
-    staging_db = {
-      instance_type = "t3.small"
+    db = {
+      instance_type = "t4g.small"
       key_name      = aws_key_pair.tf_key.key_name
       sg_ids        = [for sg in module.sg_db : sg]
       volume_size   = 20
       assign_eip    = true
-      ami_id        = var.ami_id_deb
+      ami_id        = "ami-08a74fd5a291db25a"
     },
     # OPEN-PROJECT INSTANCE
     openproject = {
@@ -175,60 +175,14 @@ module "aws_instance" {
   volume_size       = each.value.volume_size
   availability_zone = "ap-south-2c"
 }
-resource "aws_route53_record" "hub_erp" {
-  zone_id = var.kiet_domain_zone_id
-  name    = "hub.erp"
-  type    = "A"
-  ttl     = 300
-  records = [module.aws_instance["openproject"].public_ip]
-}
-resource "aws_route53_record" "test_erp" {
-  zone_id = var.kiet_domain_zone_id
-  name    = "staging.erp"
-  type    = "A"
-  ttl     = 300
-  records = [module.aws_instance["staging"].public_ip]
-}
 
-resource "aws_route53_record" "frontend_staging_ns" {
-  zone_id = var.kiet_domain_zone_id
-  name    = "frontend.staging.kiet.co.in"
-  type    = "NS"
-  ttl     = 300
-  records = [
-    "gail.ns.cloudflare.com",
-    "igor.ns.cloudflare.com"
-  ]
-}
-
-resource "aws_route53_record" "_staging_erp" {
-  zone_id = var.kiet_domain_zone_id
-  name    = "*.staging.erp"
-  type    = "A"
-  ttl     = 300
-  records = [module.aws_instance["staging"].public_ip]
-}
-# resource "aws_route53_record" "erp" {
+# resource "aws_route53_record" "hub_erp" {
 #   zone_id = var.kiet_domain_zone_id
-#   name    = "erp"
+#   name    = "hub.erp"
 #   type    = "A"
 #   ttl     = 300
 #   records = [module.aws_instance["openproject"].public_ip]
 # }
-resource "aws_route53_record" "staging_db" {
-  zone_id = var.kiet_domain_zone_id
-  name    = "db"
-  type    = "A"
-  ttl     = 300
-  records = [module.aws_instance["staging_db"].public_ip]
-}
-resource "aws_route53_record" "_staging_db" {
-  zone_id = var.kiet_domain_zone_id
-  name    = "*.db"
-  type    = "A"
-  ttl     = 300
-  records = [module.aws_instance["staging_db"].public_ip]
-}
 
 locals {
   s3_buckets = {
@@ -400,3 +354,29 @@ module "ecr_users" {
   }
 }
 #################################### ecr end ####################################
+
+#################################### ses start ####################################
+
+module "ses_user" {
+  source            = "./modules/iam"
+  user_name         = "ses-django-user"
+  create_access_key = true
+
+  inline_policies = {
+    "SES_SendEmail" = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "ses:SendEmail",
+            "ses:SendRawEmail"
+          ]
+          Resource = "*"
+        }
+      ]
+    })
+  }
+}
+
+#################################### ses end ####################################

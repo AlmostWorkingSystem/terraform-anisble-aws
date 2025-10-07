@@ -19,6 +19,18 @@ output "instance_ips" {
 #   value       = [for inst in module.aws_instance : inst]
 # }
 
+output "ses_user_access_key" {
+  description = "The access key ID for the SES user"
+  value       = module.ses_user.access_key_id
+  sensitive   = true
+}
+
+output "ses_user_secret_key" {
+  description = "The secret access key for the SES user"
+  value       = module.ses_user.secret_access_key
+  sensitive   = true
+}
+
 # S3 start
 output "s3_bucket_names" {
   description = "Map of all S3 bucket names"
