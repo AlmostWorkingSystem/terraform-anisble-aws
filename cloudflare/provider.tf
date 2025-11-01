@@ -21,4 +21,6 @@ terraform {
 
 provider "cloudflare" {
   # API token will be read from CLOUDFLARE_API_TOKEN environment variable
+  # api_key = "aPuaqLaydqM_aIqOUsLso64fsUz18H_y7LWAh4ko"
+  # email   = "erp3.0@kiet.co.in"
 }
