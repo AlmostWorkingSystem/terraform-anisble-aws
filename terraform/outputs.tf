@@ -105,3 +105,20 @@ output "ecr_iam_secret_key" {
   sensitive   = true
 }
 # ECR end
+
+output "dev_no_reply_ses_user_name" {
+  description = "IAM username for the SES user"
+  value       = module.dev_ses_user.user_name
+}
+
+output "dev_no_reply_ses_user_access_key_id" {
+  description = "Access key ID for the SES user (if created)"
+  value       = try(module.dev_ses_user.access_key_id, null)
+  sensitive   = true
+}
+
+output "dev_no_reply_ses_user_secret_access_key" {
+  description = "Secret access key for the SES user (if created)"
+  value       = try(module.dev_ses_user.secret_access_key, null)
+  sensitive   = true
+}

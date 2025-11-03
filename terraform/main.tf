@@ -132,32 +132,32 @@ resource "aws_key_pair" "tf_key" {
 # sg_ids        = [for sg in module.security_group : sg]
 locals {
   ec2 = {
-    db = {
-      instance_type = "t4g.small"
-      key_name      = aws_key_pair.tf_key.key_name
-      sg_ids        = [for sg in module.sg_db : sg]
-      volume_size   = 20
-      assign_eip    = true
-      ami_id        = "ami-08a74fd5a291db25a"
-    },
-    # OPEN-PROJECT INSTANCE
-    openproject = {
-      instance_type = "t4g.medium"
-      key_name      = aws_key_pair.tf_key.key_name
-      sg_ids        = [for sg in module.security_group : sg]
-      volume_size   = 20
-      assign_eip    = true
-      ami_id        = var.ami_id_deb
-      ami_id        = "ami-08a74fd5a291db25a"
-    }
-    staging = {
-      instance_type = "t4g.large"
-      ami_id        = "ami-08a74fd5a291db25a"
-      key_name      = aws_key_pair.tf_key.key_name
-      sg_ids        = [for sg in module.security_group : sg]
-      volume_size   = 25
-      assign_eip    = true
-    }
+    # db = {
+    #   instance_type = "t4g.small"
+    #   key_name      = aws_key_pair.tf_key.key_name
+    #   sg_ids        = [for sg in module.sg_db : sg]
+    #   volume_size   = 20
+    #   assign_eip    = true
+    #   ami_id        = "ami-08a74fd5a291db25a"
+    # },
+    # # OPEN-PROJECT INSTANCE
+    # openproject = {
+    #   instance_type = "t4g.medium"
+    #   key_name      = aws_key_pair.tf_key.key_name
+    #   sg_ids        = [for sg in module.security_group : sg]
+    #   volume_size   = 20
+    #   assign_eip    = true
+    #   ami_id        = var.ami_id_deb
+    #   ami_id        = "ami-08a74fd5a291db25a"
+    # }
+    # staging = {
+    #   instance_type = "t4g.large"
+    #   ami_id        = "ami-08a74fd5a291db25a"
+    #   key_name      = aws_key_pair.tf_key.key_name
+    #   sg_ids        = [for sg in module.security_group : sg]
+    #   volume_size   = 25
+    #   assign_eip    = true
+    # }
   }
 }
 
@@ -366,11 +366,28 @@ module "ses_user" {
     "SES_SendEmail" = jsonencode({
       Version = "2012-10-17"
       Statement = [
+        # Restrict email sending to a specific from-address
         {
+          Sid    = "AllowSendEmailFromSpecificAddress"
           Effect = "Allow"
           Action = [
             "ses:SendEmail",
             "ses:SendRawEmail"
+          ]
+          Resource = "*"
+          Condition = {
+            StringEquals = {
+              "ses:FromAddress" = "no-reply@kiet.co.in"
+            }
+          }
+        },
+        # Allow viewing SES quota and send statistics
+        {
+          Sid    = "AllowSESQuotaAndStats"
+          Effect = "Allow"
+          Action = [
+            "ses:GetSendQuota",
+            "ses:GetSendStatistics"
           ]
           Resource = "*"
         }
@@ -378,5 +395,46 @@ module "ses_user" {
     })
   }
 }
+
+
+module "dev_ses_user" {
+  source            = "./modules/iam"
+  user_name         = "dev-ses-django-user"
+  create_access_key = true
+
+  inline_policies = {
+    "SES_SendEmail" = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        # Restrict sending actions to a specific from-address
+        {
+          Sid    = "AllowSendEmailFromSpecificAddress"
+          Effect = "Allow"
+          Action = [
+            "ses:SendEmail",
+            "ses:SendRawEmail"
+          ]
+          Resource = "*"
+          Condition = {
+            StringEquals = {
+              "ses:FromAddress" = "dev-no-reply@kiet.co.in"
+            }
+          }
+        },
+        # Allow quota/statistics actions without restriction
+        {
+          Sid    = "AllowViewSESQuotaAndStats"
+          Effect = "Allow"
+          Action = [
+            "ses:GetSendQuota",
+            "ses:GetSendStatistics"
+          ]
+          Resource = "*"
+        }
+      ]
+    })
+  }
+}
+
 
 #################################### ses end ####################################
