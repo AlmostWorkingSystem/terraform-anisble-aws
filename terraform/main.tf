@@ -138,14 +138,14 @@ locals {
     #   volume_size   = 30
     #   assign_eip    = true
     # },
-    coolify = {
-      instance_type = "c6g.large"
-      ami_id        = "ami-0a09e1f2ce12e0af6"
-      key_name      = aws_key_pair.tf_key.key_name
-      sg_ids        = [for sg in module.security_group : sg]
-      volume_size   = 30
-      assign_eip    = true
-    }
+    # coolify = {
+    #   instance_type = "c6g.large"
+    #   ami_id        = "ami-0a09e1f2ce12e0af6"
+    #   key_name      = aws_key_pair.tf_key.key_name
+    #   sg_ids        = [for sg in module.security_group : sg]
+    #   volume_size   = 30
+    #   assign_eip    = true
+    # }
   }
 }
 
@@ -174,6 +174,10 @@ module "aws_instance" {
 
 locals {
   s3_buckets = {
+    "meritto-integration-kiet" = {
+      force_destroy       = false
+      block_public_policy = true
+    },
     "learning-s3-storage" = {
       force_destroy       = true
       block_public_policy = true
@@ -226,6 +230,37 @@ module "s3_users" {
 
   user_name           = "s3-${each.key}-user"
   managed_policy_arns = [aws_iam_policy.s3_bucket_policy[each.key].arn]
+}
+
+# CloudFront distribution for erp3-attachments bucket
+module "erp3_attachments_cloudfront" {
+  source = "./modules/cloudfront"
+
+  bucket_name                 = "erp3-attachments"
+  bucket_regional_domain_name = module.s3_buckets["erp3-attachments"].bucket_regional_domain_name
+  bucket_arn                  = module.s3_buckets["erp3-attachments"].bucket_arn
+
+  distribution_comment = "CloudFront CDN for ERP3 attachments (images)"
+
+  # Cache settings optimized for images
+  default_ttl = 86400    # 1 day
+  max_ttl     = 31536000 # 1 year
+  min_ttl     = 0
+
+  # Enable compression for better performance
+  compress = true
+
+  # Redirect HTTP to HTTPS
+  viewer_protocol_policy = "redirect-to-https"
+
+  # Use cost-effective price class (North America and Europe)
+  price_class = "PriceClass_200"
+
+  tags = {
+    Name        = "erp3-attachments-cdn"
+    Environment = "production"
+    Purpose     = "Image caching for ERP3"
+  }
 }
 
 
@@ -376,6 +411,39 @@ module "ses_user" {
           Action = [
             "ses:GetSendQuota",
             "ses:GetSendStatistics"
+          ]
+          Resource = "*"
+        },
+        # Allow managing email templates
+        {
+          Sid    = "AllowManageEmailTemplates"
+          Effect = "Allow"
+          Action = [
+            "ses:CreateTemplate",
+            "ses:GetTemplate",
+            "ses:UpdateTemplate",
+            "ses:DeleteTemplate",
+            "ses:ListTemplates",
+            "ses:TestRenderTemplate"
+          ]
+          Resource = "*"
+        },
+        # Allow domain verification and identity management
+        {
+          Sid    = "AllowDomainVerification"
+          Effect = "Allow"
+          Action = [
+            "ses:VerifyDomainDkim",
+            "ses:VerifyDomainIdentity",
+            "ses:GetIdentityVerificationAttributes",
+            "ses:GetIdentityDkimAttributes",
+            "ses:SetIdentityDkimEnabled",
+            "ses:SetIdentityMailFromDomain",
+            "ses:GetIdentityMailFromDomainAttributes",
+            "ses:SetIdentityNotificationTopic",
+            "ses:GetIdentityNotificationAttributes",
+            "ses:SetIdentityFeedbackForwardingEnabled",
+            "ses:SetIdentityHeadersInNotificationsEnabled"
           ]
           Resource = "*"
         }

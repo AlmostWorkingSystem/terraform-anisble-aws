@@ -122,3 +122,19 @@ output "dev_no_reply_ses_user_secret_access_key" {
   value       = try(module.dev_ses_user.secret_access_key, null)
   sensitive   = true
 }
+
+# CloudFront outputs
+output "erp3_attachments_cloudfront_domain" {
+  description = "CloudFront distribution domain name for erp3-attachments"
+  value       = module.erp3_attachments_cloudfront.distribution_domain_name
+}
+
+output "erp3_attachments_cloudfront_id" {
+  description = "CloudFront distribution ID for erp3-attachments"
+  value       = module.erp3_attachments_cloudfront.distribution_id
+}
+
+output "erp3_attachments_cloudfront_arn" {
+  description = "CloudFront distribution ARN for erp3-attachments"
+  value       = module.erp3_attachments_cloudfront.distribution_arn
+}
