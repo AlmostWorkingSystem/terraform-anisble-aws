@@ -38,6 +38,26 @@ resource "cloudflare_dns_record" "adminer" {
   comment = "For adminer"
 }
 
+resource "cloudflare_dns_record" "cdn" {
+  zone_id = var.zone_id
+  name    = "cdn.kiet.co.in"
+  content = "d21m4rf92yeikl.cloudfront.net"
+  type    = "CNAME"
+  ttl     = 3600
+  proxied = false
+  comment = "For cdn"
+}
+
+resource "cloudflare_dns_record" "cdn_validation" {
+  zone_id = var.zone_id
+  name    = "_714bc8f9922246cac119bbb33b1f57aa.cdn.kiet.co.in"
+  content = "_633757690836f1f7fd9c0f512f9ef8e5.jkddzztszm.acm-validations.aws"
+  type    = "CNAME"
+  ttl     = 3600
+  proxied = false
+  comment = "For cdn validation"
+}
+
 locals {
   s3_buckets = {
     "erp3-attachments" = {

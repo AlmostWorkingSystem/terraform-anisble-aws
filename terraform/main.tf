@@ -220,10 +220,24 @@ module "erp3_attachments_cloudfront" {
 
   logging_bucket = "" # !TODO
 
+  aliases             = ["cdn.kiet.co.in"]
+  acm_certificate_arn = aws_acm_certificate.cdn_cert.arn
+
   tags = {
     Name        = "kiet-erp3-attachments-prod-cdn"
     Environment = "production"
     Purpose     = "Image caching for ERP3"
+  }
+}
+
+# ACM Certificate for CloudFront (Must be in us-east-1)
+resource "aws_acm_certificate" "cdn_cert" {
+  provider          = aws.us_east_1
+  domain_name       = "cdn.kiet.co.in"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

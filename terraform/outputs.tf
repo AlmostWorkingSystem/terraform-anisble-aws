@@ -138,3 +138,23 @@ output "erp3_attachments_cloudfront_arn" {
   description = "CloudFront distribution ARN for erp3-attachments"
   value       = module.erp3_attachments_cloudfront.distribution_arn
 }
+
+output "acm_certificate_validation_records" {
+  description = "DNS records to validate the ACM certificate"
+  value = {
+    for dvo in aws_acm_certificate.cdn_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+}
+
+output "cloudfront_cname_record" {
+  description = "CNAME record to point example.com to CloudFront"
+  value = {
+    Type  = "CNAME"
+    Name  = "cdn"
+    Value = module.erp3_attachments_cloudfront.distribution_domain_name
+  }
+}

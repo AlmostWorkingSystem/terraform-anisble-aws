@@ -95,3 +95,15 @@ variable "logging_include_cookies" {
   type        = bool
   default     = false
 }
+
+variable "aliases" {
+  description = "List of aliases (CNAMEs) for the distribution"
+  type        = list(string)
+  default     = []
+}
+
+variable "acm_certificate_arn" {
+  description = "ARN of the ACM certificate to use. If not provided, CloudFront default certificate is used"
+  type        = string
+  default     = null
+}
