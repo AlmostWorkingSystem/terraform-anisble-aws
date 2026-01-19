@@ -1,23 +1,3 @@
-resource "cloudflare_dns_record" "db" {
-  zone_id = var.zone_id
-  name    = "db.kiet.co.in"
-  content = "98.130.141.194"
-  type    = "A"
-  ttl     = 3600
-  proxied = false
-  comment = "For DB"
-}
-
-resource "cloudflare_dns_record" "_db" {
-  zone_id = var.zone_id
-  name    = "*.db.kiet.co.in"
-  content = "98.130.141.194"
-  type    = "A"
-  ttl     = 3600
-  proxied = false
-  comment = "For DB Adminer and stuff"
-}
-
 resource "cloudflare_dns_record" "hub" {
   zone_id = var.zone_id
   name    = "hub.erp.kiet.co.in"
@@ -26,36 +6,6 @@ resource "cloudflare_dns_record" "hub" {
   ttl     = 3600
   proxied = false
   comment = "For ERP OpenProject"
-}
-
-resource "cloudflare_dns_record" "frontend" {
-  zone_id = var.zone_id
-  name    = "erp.kiet.co.in"
-  content = "mjtnrtb9.up.railway.app"
-  type    = "CNAME"
-  ttl     = 3600
-  proxied = false
-  comment = "For frontend"
-}
-
-resource "cloudflare_dns_record" "staging" {
-  zone_id = var.zone_id
-  name    = "staging.erp.kiet.co.in"
-  content = "18.60.11.244"
-  type    = "A"
-  ttl     = 3600
-  proxied = false
-  comment = "For Staging"
-}
-
-resource "cloudflare_dns_record" "backend_staging" {
-  zone_id = var.zone_id
-  name    = "backend-staging.kiet.co.in"
-  content = "18.60.11.244"
-  type    = "A"
-  ttl     = 3600
-  proxied = false
-  comment = "For backend_staging"
 }
 
 resource "cloudflare_dns_record" "railway_backend" {
@@ -78,14 +28,14 @@ resource "cloudflare_dns_record" "uptime" {
   comment = "For uptime"
 }
 
-resource "cloudflare_dns_record" "_staging" {
+resource "cloudflare_dns_record" "adminer" {
   zone_id = var.zone_id
-  name    = "*.staging.erp.kiet.co.in"
-  content = "18.60.11.244"
-  type    = "A"
+  name    = "adminer.kiet.co.in"
+  content = "7djnsxad.up.railway.app"
+  type    = "CNAME"
   ttl     = 3600
   proxied = false
-  comment = "For *Staging"
+  comment = "For adminer"
 }
 
 locals {

@@ -120,32 +120,6 @@ locals {
     #   assign_eip    = true
     #   ami_id        = "ami-08a74fd5a291db25a"
     # },
-    # # OPEN-PROJECT INSTANCE
-    # openproject = {
-    #   instance_type = "t4g.medium"
-    #   key_name      = aws_key_pair.tf_key.key_name
-    #   sg_ids        = [for sg in module.security_group : sg]
-    #   volume_size   = 20
-    #   assign_eip    = true
-    #   ami_id        = var.ami_id_deb
-    #   ami_id        = "ami-08a74fd5a291db25a"
-    # }
-    # db = {
-    #   instance_type = "c6g.medium"
-    #   ami_id        = "ami-0a09e1f2ce12e0af6"
-    #   key_name      = aws_key_pair.tf_key.key_name
-    #   sg_ids        = [for sg in module.security_group : sg]
-    #   volume_size   = 30
-    #   assign_eip    = true
-    # },
-    # coolify = {
-    #   instance_type = "c6g.large"
-    #   ami_id        = "ami-0a09e1f2ce12e0af6"
-    #   key_name      = aws_key_pair.tf_key.key_name
-    #   sg_ids        = [for sg in module.security_group : sg]
-    #   volume_size   = 30
-    #   assign_eip    = true
-    # }
   }
 }
 
@@ -164,31 +138,19 @@ module "aws_instance" {
   availability_zone = "ap-south-2c"
 }
 
-# resource "aws_route53_record" "hub_erp" {
-#   zone_id = var.kiet_domain_zone_id
-#   name    = "hub.erp"
-#   type    = "A"
-#   ttl     = 300
-#   records = [module.aws_instance["openproject"].public_ip]
-# }
-
 locals {
   s3_buckets = {
     "meritto-integration-kiet" = {
       force_destroy       = false
       block_public_policy = true
     },
-    "learning-s3-storage" = {
-      force_destroy       = true
-      block_public_policy = true
-    },
     "erp3-attachments" = {
       force_destroy       = true
       block_public_policy = false
     },
-    "postgres-all-db-backup" = {
-      force_destroy       = true
-      block_public_policy = true
+    "kiet-erp3-attachments-prod" = {
+      force_destroy       = false
+      block_public_policy = false
     }
   }
 }
@@ -236,15 +198,15 @@ module "s3_users" {
 module "erp3_attachments_cloudfront" {
   source = "./modules/cloudfront"
 
-  bucket_name                 = "erp3-attachments"
-  bucket_regional_domain_name = module.s3_buckets["erp3-attachments"].bucket_regional_domain_name
-  bucket_arn                  = module.s3_buckets["erp3-attachments"].bucket_arn
+  bucket_name                 = "kiet-erp3-attachments-prod"
+  bucket_regional_domain_name = module.s3_buckets["kiet-erp3-attachments-prod"].bucket_regional_domain_name
+  bucket_arn                  = module.s3_buckets["kiet-erp3-attachments-prod"].bucket_arn
 
   distribution_comment = "CloudFront CDN for ERP3 attachments (images)"
 
   # Cache settings optimized for images
-  default_ttl = 86400    # 1 day
-  max_ttl     = 31536000 # 1 year
+  default_ttl = 86400   # 1 day
+  max_ttl     = 2592000 # 1 month
   min_ttl     = 0
 
   # Enable compression for better performance
@@ -256,8 +218,10 @@ module "erp3_attachments_cloudfront" {
   # Use cost-effective price class (North America and Europe)
   price_class = "PriceClass_200"
 
+  logging_bucket = "" # !TODO
+
   tags = {
-    Name        = "erp3-attachments-cdn"
+    Name        = "kiet-erp3-attachments-prod-cdn"
     Environment = "production"
     Purpose     = "Image caching for ERP3"
   }

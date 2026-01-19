@@ -9,6 +9,14 @@ resource "aws_cloudfront_distribution" "this" {
   comment             = var.distribution_comment
   price_class         = var.price_class
   default_root_object = ""
+  http_version        = "http2and3"
+
+  # Logging configuration
+  # logging_config {
+  #   include_cookies = var.logging_include_cookies
+  #   bucket          = var.logging_bucket
+  #   prefix          = var.logging_prefix
+  # }
 
   origin {
     domain_name = var.bucket_regional_domain_name
