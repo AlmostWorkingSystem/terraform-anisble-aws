@@ -35,8 +35,8 @@ module "email_bucket" {
   restrict_public_buckets = false
 }
 
-# Same policy the account's "Update bucket policy" button writes (without CloudFront),
-# so pressing it changes nothing. The key is not given s3:PutBucketPolicy.
+# Same policy and public access block the account's "Update bucket policy" button writes
+# (without CloudFront), so pressing it causes no drift.
 resource "aws_s3_bucket_policy" "email_bucket" {
   bucket = module.email_bucket.bucket_name
   region = local.email_region
@@ -216,6 +216,12 @@ module "kiet_eduvverse_email_user" {
           Effect   = "Allow"
           Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
           Resource = ["${module.email_bucket.bucket_arn}/sent/*", "${module.email_bucket.bucket_arn}/received/*"]
+        },
+        {
+          Sid      = "BucketPolicyButton"
+          Effect   = "Allow"
+          Action   = ["s3:PutBucketPolicy", "s3:PutBucketPublicAccessBlock"]
+          Resource = module.email_bucket.bucket_arn
         },
         {
           Sid      = "ReadReceivedMail"
