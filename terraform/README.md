@@ -24,13 +24,9 @@ terraform apply
 
 ### Email webhook
 
-Once the latest backend is live, subscribe both email topics to its webhook (the backend confirms them):
-
-```sh
-terraform apply -var 'email_webhook_url=https://<backend>/v1/communication_email/webhook/'
-```
-
-Keep passing the same value afterwards (or put it in a `terraform.tfvars`), otherwise the next apply removes the subscriptions.
+Both email SNS topics post to `var.email_webhook_url` (default in `email.tf`:
+`https://backend.kiet.eduvverse.com/v1/communication_email/webhook/`). The backend confirms the
+subscriptions itself, so the backend must be up when they are created or changed.
 
 ## Not managed here (created by hand)
 

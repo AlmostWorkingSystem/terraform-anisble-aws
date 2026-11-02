@@ -17,9 +17,9 @@ locals {
 }
 
 variable "email_webhook_url" {
-  description = "Backend webhook for SNS, e.g. https://<backend>/v1/communication_email/webhook/. Leave empty until the latest backend is live; it confirms the subscriptions itself."
+  description = "Backend webhook both SNS topics post to; the backend confirms the subscriptions itself. Empty = no subscriptions."
   type        = string
-  default     = ""
+  default     = "https://backend.kiet.eduvverse.com/v1/communication_email/webhook/"
 }
 
 # --- Buckets ---------------------------------------------------------------
