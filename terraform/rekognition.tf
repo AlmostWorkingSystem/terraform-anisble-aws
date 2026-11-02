@@ -36,6 +36,7 @@ module "rekognition_user" {
   source            = "./modules/iam"
   user_name         = "rekognition-service-user"
   create_access_key = true
+  tags              = { AKIAQN6AAPCNAMIWZJL3 = "staging development" }
 
   inline_policies = {
     RekognitionFull = data.aws_iam_policy_document.rekognition_access.json

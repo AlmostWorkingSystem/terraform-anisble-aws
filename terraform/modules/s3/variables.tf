@@ -28,3 +28,19 @@ variable "region" {
   type        = string
   default     = "ap-south-2"
 }
+
+variable "block_public_acls" {
+  description = "Defaults to block_public_policy when null"
+  type        = bool
+  default     = null
+}
+
+variable "ignore_public_acls" {
+  type    = bool
+  default = false
+}
+
+variable "restrict_public_buckets" {
+  type    = bool
+  default = false
+}

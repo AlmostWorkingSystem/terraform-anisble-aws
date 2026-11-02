@@ -124,37 +124,21 @@ output "dev_no_reply_ses_user_secret_access_key" {
 }
 
 # CloudFront outputs
-output "erp3_attachments_cloudfront_domain" {
-  description = "CloudFront distribution domain name for erp3-attachments"
-  value       = module.erp3_attachments_cloudfront.distribution_domain_name
-}
-
-output "erp3_attachments_cloudfront_id" {
-  description = "CloudFront distribution ID for erp3-attachments"
-  value       = module.erp3_attachments_cloudfront.distribution_id
-}
-
-output "erp3_attachments_cloudfront_arn" {
-  description = "CloudFront distribution ARN for erp3-attachments"
-  value       = module.erp3_attachments_cloudfront.distribution_arn
+output "cdn_distributions" {
+  description = "CloudFront distributions: id and domain to point the Cloudflare CNAME at"
+  value = {
+    prod    = { id = aws_cloudfront_distribution.prod.id, domain = aws_cloudfront_distribution.prod.domain_name, alias = "cdn.kiet.co.in" }
+    staging = { id = aws_cloudfront_distribution.staging.id, domain = aws_cloudfront_distribution.staging.domain_name, alias = "cdn.staging.kiet.co.in" }
+  }
 }
 
 output "acm_certificate_validation_records" {
-  description = "DNS records to validate the ACM certificate"
+  description = "DNS records that validate the CDN certificates"
   value = {
-    for dvo in aws_acm_certificate.cdn_cert.domain_validation_options : dvo.domain_name => {
+    for dvo in concat(tolist(aws_acm_certificate.cdn_cert.domain_validation_options), tolist(aws_acm_certificate.cdn_cert_staging.domain_validation_options)) : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
       type   = dvo.resource_record_type
     }
-  }
-}
-
-output "cloudfront_cname_record" {
-  description = "CNAME record to point example.com to CloudFront"
-  value = {
-    Type  = "CNAME"
-    Name  = "cdn"
-    Value = module.erp3_attachments_cloudfront.distribution_domain_name
   }
 }

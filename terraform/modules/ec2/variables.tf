@@ -31,3 +31,8 @@ variable "volume_size" {
   type    = number
   default = 10
 }
+
+variable "root_volume_tags" {
+  type    = map(string)
+  default = {}
+}

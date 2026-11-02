@@ -16,3 +16,8 @@ variable "inline_policies" {
   type    = map(string) # map of { policy_name = json_policy }
   default = {}
 }
+
+variable "tags" {
+  type    = map(string)
+  default = {}
+}

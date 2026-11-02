@@ -32,3 +32,9 @@ variable "egress_rules" {
   }))
   default = []
 }
+
+variable "description" {
+  description = "Defaults to \"Security group for <name>\""
+  type        = string
+  default     = ""
+}

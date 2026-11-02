@@ -12,7 +12,7 @@ variable "ttl" {
 }
 
 variable "records" {
-  type    = list(string)
+  type = list(string)
 }
 
 variable "type" {

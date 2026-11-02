@@ -1,7 +1,7 @@
 resource "aws_security_group" "this" {
   name        = var.name
   vpc_id      = var.vpc_id
-  description = "Security group for ${var.name}"
+  description = coalesce(var.description, "Security group for ${var.name}")
 
   dynamic "ingress" {
     for_each = var.ingress_rules
